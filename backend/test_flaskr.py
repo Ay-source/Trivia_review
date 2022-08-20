@@ -2,6 +2,7 @@ import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 
 from flaskr import create_app
 from models import setup_db, Question, Category
@@ -14,8 +15,14 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgresql://{}:{}@{}/{}".format('student', 'student', 'localhost:5432', self.database_name)
+        #Get environment variables
+        load_dotenv()
+        self.host = os.getenv('DB_HOST', '127.0.0.1:5432')
+        self.user = os.getenv('DB_USER', 'postgres')
+        self.password = os.getenv('DB_PASSWORD', 'postgres')
+        self.database_name = os.getenv('DB_TEST_NAME', 'trivia_test')
+        self.database_path = "postgresql://{}:{}@{}/{}".\
+        format(self.user, self.password,self.host, self.database_name)
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
@@ -31,7 +38,8 @@ class TriviaTestCase(unittest.TestCase):
 
     """
     TODO
-    Write at least one test for each test for successful operation and for expected errors.
+    Write at least one test for each test for successful operation
+    and for expected errors.
     """
 
     def test_get_categories(self):
@@ -59,7 +67,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data["success"])
         self.assertTrue(data["questions"])
         self.assertTrue(data["total_questions"])
-        self.assertEqual(data["current_category"], None)
+        self.assertTrue(data["current_category"])
         self.assertTrue(data["categories"], None)
 
     def test_404_get_questions(self):

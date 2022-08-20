@@ -2,9 +2,20 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
+from dotenv import load_dotenv
 
-database_name = 'trivia'
-database_path = "postgresql://{}:{}@{}/{}".format('student', 'student', 'localhost:5432', database_name)
+#Getting database from environment variables
+load_dotenv()
+#Copied from Udacity reviewer's suggestion as i see that it doesn't need any modification.
+DB_HOST = os.getenv('DB_HOST', '127.0.0.1:5432')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+DB_NAME = os.getenv('DB_INIT_NAME', 'trivia')
+DB_PATH = 'postgresql+psycopg2://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
+#database_name = 'trivia'
+#database_path = "postgresql://{}:{}@{}/{}".format('student', 'student', 'localhost:5432', database_name)
+database_path = DB_PATH
 
 db = SQLAlchemy()
 

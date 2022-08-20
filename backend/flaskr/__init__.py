@@ -97,12 +97,17 @@ def create_app(test_config=None):
         if questions[start:end] == []:
             abort(404)
 
+        #List of categories to be returned
+        questions_returned = questions[start:end]
+        current_category = [i["category"] for i in questions_returned]
+
         return jsonify({
             "success": True,
             "questions": questions[start:end],
             "total_questions": len(questions),
             "categories": all_categories(),
-            "current_category": None #I don't see the use of this so i left it empty
+            #Adviced by Udacity reviewer to return a list of categories instead of None
+            "current_category": current_category
         })
 
     """
@@ -114,7 +119,8 @@ def create_app(test_config=None):
     """
     @app.route("/questions/<int:question_id>", methods=["DELETE"])
     def delete_question(question_id):
-        question = Question.query.filter(Question.id == question_id).one_or_none()
+        question = Question.query.filter(Question.id == question_id).\
+            one_or_none()
         
         #If question to be deleted doesn't exists in the database
         if question is None:
@@ -128,7 +134,8 @@ def create_app(test_config=None):
             close()
             abort(400)
         return jsonify({
-            "success": True
+            "success": True,
+            "id": question_id
         })
 
     """
@@ -248,17 +255,22 @@ def create_app(test_config=None):
                 for i in previous_questions:
                     available_questions.remove(i)
             
-            #Pick a random available question
-            rand = random.choice(available_questions)
+            if available_questions:
+                #Pick a random available question
+                rand = random.choice(available_questions)
 
-            #Gets a new question for the client
-            for question in questions:
-                if question["id"] == rand:
-                    new_question = question
-                    break   
-        except:
+                #Gets a new question for the client
+                for question in questions:
+                    if question["id"] == rand:
+                        new_question = question
+                        break
+            else:
+                new_question = ''
+        except Exception as e:
+            print(e)
             abort(422)
         
+        print("same here")
         return jsonify({
             "success": True,
             "question": new_question
@@ -280,7 +292,7 @@ def create_app(test_config=None):
         }), 405
 
     @app.errorhandler(404)
-    def method_not_allowed(error):
+    def resource_not_allowed(error):
         return jsonify({
             "success": False,
             "error": 404,
@@ -288,7 +300,7 @@ def create_app(test_config=None):
         }), 404
 
     @app.errorhandler(400)
-    def method_not_allowed(error):
+    def bad_request(error):
         return jsonify({
             "success": False,
             "error": 400,
@@ -296,12 +308,20 @@ def create_app(test_config=None):
         }), 400
 
     @app.errorhandler(422)
-    def method_not_allowed(error):
+    def Unprocessable(error):
         return jsonify({
             "success": False,
             "error": 422,
             "message": "Unprocessable"
         }), 422
+
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            "error": 500,
+            "message": "Internal Server Error"
+        }), 500
 
     return app
 
